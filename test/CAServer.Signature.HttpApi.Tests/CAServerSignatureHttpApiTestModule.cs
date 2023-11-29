@@ -31,6 +31,11 @@ public class CAServerSignatureHttpApiTestModule : AbpModule
                 { "test-key", privateKeyBytes.ToHex() }
             };
         });
+        context.Services.Configure<KeyStoreOptions>(o =>
+        {
+            o.KeyStorePath = "keystore file path";
+            o.KeyStorePassword = "keystore file password";
+        });
         base.ConfigureServices(context);
     }
 }
