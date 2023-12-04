@@ -6,6 +6,7 @@ using System.Text;
 using AElf;
 using AElf.Cryptography;
 using AElf.Cryptography.ECDSA;
+using AElf.KeyStore;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.Modularity;
@@ -24,13 +25,12 @@ public class CAServerSignatureHttpApiTestModule : AbpModule
         string hex1 = keyPair.PrivateKey.ToHex();
         string hex2 = keyPair.PublicKey.ToHex();
         byte[] privateKeyBytes = ByteArrayHelper.HexStringToByteArray(hex1);
-        context.Services.Configure<KeyPairInfoOptions>(option =>
+        context.Services.Configure<KeyStoreOptions>(option =>
         {
-            option.PrivateKeyDictionary = new Dictionary<string, string>
-            {
-                { "test-key", privateKeyBytes.ToHex() }
-            };
+            option.Path = "xxx";
+            option.Password = "xxx";
         });
+        context.Services.AddSingleton<AElfKeyStoreService>();
         base.ConfigureServices(context);
     }
 }

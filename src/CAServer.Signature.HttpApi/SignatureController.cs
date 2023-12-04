@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AElf;
 using AElf.Cryptography;
+using AElf.KeyStore;
 using CAServer.Signature.Dtos;
 using Google.Protobuf;
 using Microsoft.AspNetCore.Mvc;
@@ -17,14 +18,17 @@ namespace CAServer.Signature;
 public class SignatureController : CAServerSignatureController
 {
     private readonly ILogger<SignatureController> _logger;
-    private readonly KeyPairInfoOptions _keyPairInfoOptions;
+    private readonly KeyStoreOptions _keyStoreOptions;
+    private readonly AElfKeyStoreService _aelfKeyStoreService;
 
 
     public SignatureController(ILogger<SignatureController> logger,
-        IOptionsSnapshot<KeyPairInfoOptions> signatureOptions)
+        IOptions<KeyStoreOptions> keyStoreOptions,
+        AElfKeyStoreService aelfKeyStoreService)
     {
         _logger = logger;
-        _keyPairInfoOptions = signatureOptions.Value;
+        _keyStoreOptions = keyStoreOptions.Value;
+        _aelfKeyStoreService = aelfKeyStoreService;
     }
 
     [HttpPost]
@@ -34,8 +38,9 @@ public class SignatureController : CAServerSignatureController
         try
         {
             _logger.LogDebug("input PublicKey: {PublicKey}, HexMsg: {HexMsg}", input.PublicKey, input.HexMsg);
-            var privateKey = GetPrivateKeyByPublicKey(input.PublicKey);
-            var recoverableInfo = CryptoHelper.SignWithPrivateKey(ByteArrayHelper.HexStringToByteArray(privateKey),
+            var privateKey = _aelfKeyStoreService.DecryptKeyStoreFromFile(_keyStoreOptions.Password, 
+                _keyStoreOptions.Path);
+            var recoverableInfo = CryptoHelper.SignWithPrivateKey(privateKey,
                 ByteArrayHelper.HexStringToByteArray(input.HexMsg));
             _logger.LogDebug("Signature result :{signatureResult}", recoverableInfo.ToHex());
 
@@ -51,14 +56,4 @@ public class SignatureController : CAServerSignatureController
         }
     }
 
-    private string GetPrivateKeyByPublicKey(string publicKey)
-    {
-        if (_keyPairInfoOptions.PrivateKeyDictionary.TryGetValue(publicKey, out string _))
-        {
-            return _keyPairInfoOptions.PrivateKeyDictionary[publicKey];
-        }
-
-        _logger.LogError("Publish key {publishKey} not exist!", publicKey);
-        throw new KeyNotFoundException("Publish key not exist!");
-    }
 }
