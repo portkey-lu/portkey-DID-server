@@ -1,4 +1,5 @@
-﻿using Volo.Abp.AspNetCore.Mvc;
+﻿using AElf.KeyStore;
+using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.Modularity;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.AutoMapper;
@@ -13,6 +14,7 @@ public class CAServerSignatureHttpApiModule : AbpModule
     {
         Configure<AbpAutoMapperOptions>(options => { options.AddMaps<CAServerSignatureHttpApiModule>(); });
         var configuration = context.Services.GetConfiguration();
-        Configure<KeyPairInfoOptions>(configuration.GetSection("KeyPairInfo"));
+        Configure<KeyStoreOptions>(configuration.GetSection("KeyStore"));
+        context.Services.AddSingleton<AElfKeyStoreService>();
     }
 }
