@@ -9,7 +9,14 @@ namespace CAServer.Signature;
 
 public interface ISignatureProvider
 {
+    SignType SignType { get; }
     Task<string> SignTxMsg(string publicKey, string hexMsg);
+}
+
+public enum SignType
+{
+    HttpClient,
+    KeyStore
 }
 
 public class SignatureProvider : ISignatureProvider, ISingletonDependency
@@ -26,6 +33,8 @@ public class SignatureProvider : ISignatureProvider, ISingletonDependency
         _signatureServerOptions = signatureOptions.Value;
         _logger = logger;
     }
+
+    public SignType SignType => SignType.HttpClient;
 
     public async Task<string> SignTxMsg(string publicKey, string hexMsg)
     {
